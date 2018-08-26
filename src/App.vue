@@ -1,7 +1,7 @@
 <template>
 <div id="app" class="container">
     <div class="page-header text-center" style="padding-bottom:20px;">
-        <h1>YES + BET<br/> <small>You can Yes. You can Bet.</small></h1>
+        <h2>YES + BET<br/></h2> <i>You can Yes, You can Bet.</i>
     </div>
     <div id="Matchs" v-for="match in Matchs" style="padding-bottom:20px;">
         <div class="card " v-bind:class="{ tran: isDisabled(match.status)}">
@@ -10,7 +10,7 @@
             </div>
             <div class="row">
                 <div class="card-body col-md-6 ">
-                    <h5 class="card-title">Team {{match.first}}</h5>
+                    <h5 class="card-title">{{match.first}} - 50%</h5>
                     <div class="input-group mb-3">
                         <vue-numeric class="form-control" v-bind:precision="3" separator="," v-model="match.betPrice0" :disabled="isDisabled(match.status)"></vue-numeric>
                         <div class="input-group-append">
@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="card-body col-md-6 text-right">
-                    <h5 class="card-title">Team {{match.secound}}</h5>
+                    <h5 class="card-title">{{match.secound}} - 50%</h5>
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <button class="btn btn-outline-primary" type="button" :disabled="isDisabled(match.status)" v-on:click="letBet(match.contractAddress, 1, match.betPrice1)" style="width:100px;">
@@ -32,7 +32,7 @@
             </div>
             <div class="row text-center">
                 <div class="col-md-12">
-                    Balance = {{match.matchBalance}}
+                    <h5>Bet Balance = 0.00 ETH</h5>
                 </div>
             </div>
         </div>
