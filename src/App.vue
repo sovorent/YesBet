@@ -1,120 +1,322 @@
 <template>
-  <div id="app" class="container">
-    <div class="page-header">
-      <h1>Vue.js 2 & Firebase<br/> <small>Sample Application by CodingTheSmartWay.com</small></h1>
+<div id="app" class="container">
+    <div class="page-header text-center" style="padding-bottom:20px;">
+        <h1>YES + BET<br/> <small>You can Yes. You can Bet.</small></h1>
     </div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Add New Books</h3>
-      </div>
-      <div class="panel-body">
-         <form id="form" class="form-inline" v-on:submit.prevent="addBook">
-          <div class="form-group">
-            <label for="bookTitle">Title:</label>
-            <input type="text" id="bookTitle" class="form-control" v-model="newBook.title">
-          </div>
-          <div class="form-group">
-            <label for="bookAuthor">Author:</label>
-            <input type="text" id="bookAuthor" class="form-control" v-model="newBook.author">
-          </div>
-          <div class="form-group">
-            <label for="bookUrl">Url:</label>
-            <input type="text" id="bookUrl" class="form-control" v-model="newBook.url">
-          </div>
-          <input type="submit" class="btn btn-primary" value="Add Book">
-        </form>
-      </div>
+    <div id="Matchs" v-for="match in Matchs" style="padding-bottom:20px;">
+        <div class="card " v-bind:class="{ tran: isDisabled(match.status)}">
+            <div class="card-header">
+                {{match.matchName}} {{match.id}}
+            </div>
+            <div class="row">
+                <div class="card-body col-md-6 ">
+                    <h5 class="card-title">Team {{match.first}}</h5>
+                    <div class="input-group mb-3">
+                        <vue-numeric class="form-control" currency="ETH" separator="," v-model="match.betPrice0" :disabled="isDisabled(match.status)"></vue-numeric>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-danger" type="button" :disabled="isDisabled(match.status)" v-on:click="letBet(match.contractAddress, 0, match.betPrice0)" style="width:100px;">
+                            Bet</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body col-md-6 text-right">
+                    <h5 class="card-title">Team {{match.secound}}</h5>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-primary" type="button" :disabled="isDisabled(match.status)" v-on:click="letBet(match.contractAddress, 1, match.betPrice1)" style="width:100px;">
+                              Bet</button>
+                        </div>
+                        <vue-numeric class="form-control" currency="ETH" separator="," v-model="match.betPrice1" :disabled="isDisabled(match.status)"></vue-numeric>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Book List</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Author</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="book in books">
-              <td><a v-bind:href="book.url">{{book.title}}</a></td>
-              <td>{{book.author}}</td>
-              <td><span class="glyphicon glyphicon-trash" aria-hidden="true" v-on:click="removeBook(book)"></span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+</div>
 </template>
 
 <script>
-import Hello from './components/Hello'
-
 import Firebase from 'firebase'
-
 import toastr from 'toastr'
+import Web3 from 'web3'
+import Vue from 'vue'
+import VueNumeric from 'vue-numeric'
+
+Vue.use(VueNumeric)
+// Initializing
+if (typeof web3 !== 'undefined') {
+    web3 = new Web3(web3.currentProvider);
+}
+// Get default address
+web3.eth.defaultAccount = web3.eth.accounts[0];
+var abi = [{
+        "constant": false,
+        "inputs": [],
+        "name": "Ownable",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "owner",
+        "outputs": [{
+            "name": "",
+            "type": "address"
+        }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [{
+                "name": "_betName",
+                "type": "string"
+            },
+            {
+                "name": "_leftSideName",
+                "type": "string"
+            },
+            {
+                "name": "_rightSideName",
+                "type": "string"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [{
+                "indexed": true,
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "constant": false,
+        "inputs": [{
+            "name": "_side",
+            "type": "bool"
+        }],
+        "name": "betting",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [{
+            "name": "_winner",
+            "type": "bool"
+        }],
+        "name": "payToWinner",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getMatch",
+        "outputs": [{
+                "name": "_name",
+                "type": "string"
+            },
+            {
+                "name": "_leftSide",
+                "type": "string"
+            },
+            {
+                "name": "_rightSide",
+                "type": "string"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getBalance",
+        "outputs": [{
+            "name": "_balance",
+            "type": "uint256"
+        }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getPool",
+        "outputs": [{
+                "name": "_name",
+                "type": "string"
+            },
+            {
+                "name": "_leftSide",
+                "type": "string"
+            },
+            {
+                "name": "_rightSide",
+                "type": "string"
+            },
+            {
+                "name": "_amountA",
+                "type": "uint256"
+            },
+            {
+                "name": "_amountB",
+                "type": "uint256"
+            },
+            {
+                "name": "_lenA",
+                "type": "uint256"
+            },
+            {
+                "name": "_lenB",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    }
+];
 
 let config = {
-    apiKey: "AIzaSyAVdaPNXB0X6RXNwhaRY0jVoyJbsgJJMK0",
-    authDomain: "vuejs-firebase-01-deafa.firebaseapp.com",
-    databaseURL: "https://vuejs-firebase-01-deafa.firebaseio.com",
-    storageBucket: "vuejs-firebase-01-deafa.appspot.com",
-    messagingSenderId: "318454757105"
-  };
+    apiKey: "AIzaSyANO56rF2l1pszEOERr8zt61Gn0GDJ1UeU",
+    authDomain: "yesbet-8d794.firebaseapp.com",
+    databaseURL: "https://yesbet-8d794.firebaseio.com",
+    projectId: "yesbet-8d794",
+    storageBucket: "yesbet-8d794.appspot.com",
+    messagingSenderId: "597788857277"
+};
 
 let app = Firebase.initializeApp(config)
 let db = app.database()
+let booksRef = db.ref('matchDetail')
+var dataList = [];
+var data = {};
+booksRef.on('value', function (Snapshot) {
+    Snapshot.forEach(function (Snap) {
+        var obj = Snap.val();
+        var contractAddress = obj.contractAddress;
+        var CoursetroContract = web3.eth.contract(abi);
+        var Coursetro = CoursetroContract.at(contractAddress);
+        Coursetro.getMatch(function (err, result) {
+            if (err) alert(err);
+            var data = {};
+            data.id = Snap.val().id;
+            data.contractAddress = Snap.val().contractAddress;
+            data.status = Snap.val().status;
+            data.create = Snap.val().create;
+            data.matchName = result[0];
+            data.first = result[1];
+            data.secound = result[2];
+            dataList.push(data);
 
-let booksRef = db.ref('books')
-
+        });
+        Coursetro.getBalance(function (error, result) {
+            if (!error) {
+                console.log(result.toNumber());
+            } else
+                console.error(error);
+        });
+    })
+});
 
 export default {
-  name: 'app',
-
-  firebase: {
-    books: booksRef
-  },
-
-  data () {
-    return {
-      newBook: {
-          title: '',
-          author: '',
-          url: 'http://'
-      }
-    }
-  },
-
-   methods: {
-      addBook: function () {
-        booksRef.push(this.newBook);
-        this.newBook.title = '';
-        this.newBook.author = '';
-        this.newBook.url = 'http://';
-      },
-      removeBook: function (book) {
-        booksRef.child(book['.key']).remove()
-        toastr.success('Book removed successfully')
-      }
+    name: 'app',
+    data: () => ({
+        Matchs: dataList
+    }),
+    methods: {
+        isDisabled: function (status) {
+            return status == 'pause' ? true : false;
+        },
+        letBet: function (match, team, betPrice) {
+            if (betPrice > 0) {
+                var contractAddress = '0x9D3875289D20C509024AD077f4C27B2Ba1bF5216';
+                // Create an interface to SimpleContract on TomoChain
+                var abiContract = web3.eth.contract(abi);
+                var betContract = abiContract.at(contractAddress);
+                console.log(betContract);
+                betContract.betting(team, function (err, res) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                }).send({
+                    from: web3.eth.defaultAccount,
+                    gas: 2000000,
+                    value: betPrice * 10000000000
+                }, function (error, transactionHash) {
+                    console.log('txHash: ' + transactionHash)
+                });
+            }
+        }
     },
-
-
-  components: {
-    Hello
-  }
+    computed: {
+        MatchsSort: function () {
+            return _.orderBy(this.Matchs, 'id')
+        }
+    }
 }
 </script>
 
 <style>
+body {}
+
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  margin-top: 20px;
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #2c3e50;
+    margin-top: 20px;
+}
+
+.card {
+    --background-color: #e9e4e4;
+    background-image: url('../img/cardsbg.png');
+    background-position: center;
+}
+
+.card-header {
+    color: white;
+    font-weight: bold;
+    height: 48px;
+    background-image: url('../img/title.jpg');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.tran {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+    /* IE 8 */
+    filter: alpha(opacity=50);
+    /* IE 5-7 */
+    -moz-opacity: 0.5;
+    /* Netscape */
+    -khtml-opacity: 0.5;
+    /* Safari 1.x */
+    opacity: 0.5;
+    /* Good browsers */
 }
 </style>
