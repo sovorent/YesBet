@@ -6,13 +6,13 @@
     <div id="Matchs" v-for="match in Matchs" style="padding-bottom:20px;">
         <div class="card " v-bind:class="{ tran: isDisabled(match.status)}">
             <div class="card-header">
-                {{match.matchName}} {{match.id}}
+                {{match.matchName}}
             </div>
             <div class="row">
                 <div class="card-body col-md-6 ">
                     <h5 class="card-title">Team {{match.first}}</h5>
                     <div class="input-group mb-3">
-                        <vue-numeric class="form-control" currency="ETH" separator="," v-model="match.betPrice0" :disabled="isDisabled(match.status)"></vue-numeric>
+                        <vue-numeric class="form-control" v-bind:precision="3" separator="," v-model="match.betPrice0" :disabled="isDisabled(match.status)"></vue-numeric>
                         <div class="input-group-append">
                             <button class="btn btn-outline-danger" type="button" :disabled="isDisabled(match.status)" v-on:click="letBet(match.contractAddress, 0, match.betPrice0)" style="width:100px;">
                             Bet</button>
@@ -26,8 +26,13 @@
                             <button class="btn btn-outline-primary" type="button" :disabled="isDisabled(match.status)" v-on:click="letBet(match.contractAddress, 1, match.betPrice1)" style="width:100px;">
                               Bet</button>
                         </div>
-                        <vue-numeric class="form-control" currency="ETH" separator="," v-model="match.betPrice1" :disabled="isDisabled(match.status)"></vue-numeric>
+                        <vue-numeric class="form-control" v-bind:precision="3" separator="," v-model="match.betPrice1" :disabled="isDisabled(match.status)"></vue-numeric>
                     </div>
+                </div>
+            </div>
+            <div class="row text-center">
+                <div class="col-md-12">
+                    Balance = {{match.matchBalance}}
                 </div>
             </div>
         </div>
@@ -124,8 +129,8 @@ var abi = [{
         }],
         "name": "payToWinner",
         "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
+        "payable": true,
+        "stateMutability": "payable",
         "type": "function"
     },
     {
@@ -230,17 +235,31 @@ booksRef.on('value', function (Snapshot) {
             data.matchName = result[0];
             data.first = result[1];
             data.secound = result[2];
+            data.matchBalance = Coursetro.getBalance(function (error, result) {
+                if (!error) {
+                    console.log(result.toNumber());
+                } else {
+                    return result.toNumber();
+                }
+            });
             dataList.push(data);
 
         });
-        Coursetro.getBalance(function (error, result) {
-            if (!error) {
-                console.log(result.toNumber());
-            } else
-                console.error(error);
-        });
     })
 });
+
+function getBalanceMatch(matchAddress) {
+    var contractAddress = matchAddress;
+    var CoursetroContract = web3.eth.contract(abi);
+    var Coursetro = CoursetroContract.at(contractAddress);
+    Coursetro.getBalance(function (error, result) {
+        if (!error) {
+            console.log(result.toNumber());
+            return result.toNumber();
+        } else
+            console.error(error);
+    });
+}
 
 export default {
     name: 'app',
@@ -251,25 +270,22 @@ export default {
         isDisabled: function (status) {
             return status == 'pause' ? true : false;
         },
-        letBet: function (match, team, betPrice) {
+        letBet: function (matchAdress, team, betPrice) {
+
             if (betPrice > 0) {
-                var contractAddress = '0x9D3875289D20C509024AD077f4C27B2Ba1bF5216';
-                // Create an interface to SimpleContract on TomoChain
+                var contractAddress = matchAdress;
                 var abiContract = web3.eth.contract(abi);
                 var betContract = abiContract.at(contractAddress);
-                console.log(betContract);
-                betContract.betting(team, function (err, res) {
+                betContract.betting(team, {
+                    from: web3.eth.defaultAccount,
+                    value: web3.toWei(betPrice, 'ether')
+                }, function (err, transactionHash) {
                     if (err) {
                         console.log(err);
                         return;
                     }
-                }).send({
-                    from: web3.eth.defaultAccount,
-                    gas: 2000000,
-                    value: betPrice * 10000000000
-                }, function (error, transactionHash) {
-                    console.log('txHash: ' + transactionHash)
-                });
+                    window.open('https://kovan.etherscan.io/tx/' + transactionHash);
+                })
             }
         }
     },
