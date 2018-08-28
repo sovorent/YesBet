@@ -1,7 +1,7 @@
 <template>
 <div id="app" class="container">
     <div class="page-header text-center" style="padding-bottom:20px;">
-        <h1>YES + BET<br/> <small>You can Yes. You can Bet.</small></h1>
+        <h2>YES + BET<br/></h2> <i>You can Yes, You can Bet.</i>
     </div>
     <div id="Matchs" v-for="match in Matchs" style="padding-bottom:20px;">
         <div class="card " v-bind:class="{ tran: isDisabled(match.status)}">
@@ -10,7 +10,7 @@
             </div>
             <div class="row">
                 <div class="card-body col-md-6 ">
-                    <h5 class="card-title">Team {{match.first}}</h5>
+                    <h5 class="card-title">{{match.first}} - 50%</h5>
                     <div class="input-group mb-3">
                         <vue-numeric class="form-control" v-bind:precision="3" separator="," v-model="match.betPrice0" :disabled="isDisabled(match.status)"></vue-numeric>
                         <div class="input-group-append">
@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="card-body col-md-6 text-right">
-                    <h5 class="card-title">Team {{match.secound}}</h5>
+                    <h5 class="card-title">{{match.secound}} - 50%</h5>
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <button class="btn btn-outline-primary" type="button" :disabled="isDisabled(match.status)" v-on:click="letBet(match.contractAddress, 1, match.betPrice1)" style="width:100px;">
@@ -32,7 +32,7 @@
             </div>
             <div class="row text-center">
                 <div class="col-md-12">
-                    Balance = {{match.matchBalance}}
+                    <h5>Bet Balance = 0.00 ETH</h5>
                 </div>
             </div>
         </div>
@@ -54,156 +54,174 @@ if (typeof web3 !== 'undefined') {
 }
 // Get default address
 web3.eth.defaultAccount = web3.eth.accounts[0];
-var abi = [{
-        "constant": false,
-        "inputs": [],
-        "name": "Ownable",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
+var abi =   [
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "Ownable",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "constant": true,
-        "inputs": [],
-        "name": "owner",
-        "outputs": [{
-            "name": "",
-            "type": "address"
-        }],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-        "inputs": [{
-                "name": "_betName",
-                "type": "string"
-            },
-            {
-                "name": "_leftSideName",
-                "type": "string"
-            },
-            {
-                "name": "_rightSideName",
-                "type": "string"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+      "inputs": [
+        {
+          "name": "_betName",
+          "type": "string"
+        },
+        {
+          "name": "_leftSideName",
+          "type": "string"
+        },
+        {
+          "name": "_rightSideName",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
-        "anonymous": false,
-        "inputs": [{
-                "indexed": true,
-                "name": "previousOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferred",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
     },
     {
-        "constant": false,
-        "inputs": [{
-            "name": "_side",
-            "type": "bool"
-        }],
-        "name": "betting",
-        "outputs": [],
-        "payable": true,
-        "stateMutability": "payable",
-        "type": "function"
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_side",
+          "type": "bool"
+        }
+      ],
+      "name": "betting",
+      "outputs": [],
+      "payable": true,
+      "stateMutability": "payable",
+      "type": "function"
     },
     {
-        "constant": false,
-        "inputs": [{
-            "name": "_winner",
-            "type": "bool"
-        }],
-        "name": "payToWinner",
-        "outputs": [],
-        "payable": true,
-        "stateMutability": "payable",
-        "type": "function"
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_winner",
+          "type": "bool"
+        }
+      ],
+      "name": "payToWinner",
+      "outputs": [
+        {
+          "name": "_reward",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "constant": true,
-        "inputs": [],
-        "name": "getMatch",
-        "outputs": [{
-                "name": "_name",
-                "type": "string"
-            },
-            {
-                "name": "_leftSide",
-                "type": "string"
-            },
-            {
-                "name": "_rightSide",
-                "type": "string"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
+      "constant": true,
+      "inputs": [],
+      "name": "getMatch",
+      "outputs": [
+        {
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "name": "_leftSide",
+          "type": "string"
+        },
+        {
+          "name": "_rightSide",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-        "constant": true,
-        "inputs": [],
-        "name": "getBalance",
-        "outputs": [{
-            "name": "_balance",
-            "type": "uint256"
-        }],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
+      "constant": true,
+      "inputs": [],
+      "name": "getBalance",
+      "outputs": [
+        {
+          "name": "_balance",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
     },
     {
-        "constant": true,
-        "inputs": [],
-        "name": "getPool",
-        "outputs": [{
-                "name": "_name",
-                "type": "string"
-            },
-            {
-                "name": "_leftSide",
-                "type": "string"
-            },
-            {
-                "name": "_rightSide",
-                "type": "string"
-            },
-            {
-                "name": "_amountA",
-                "type": "uint256"
-            },
-            {
-                "name": "_amountB",
-                "type": "uint256"
-            },
-            {
-                "name": "_lenA",
-                "type": "uint256"
-            },
-            {
-                "name": "_lenB",
-                "type": "uint256"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
+      "constant": true,
+      "inputs": [],
+      "name": "getPool",
+      "outputs": [
+        {
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "name": "_leftSide",
+          "type": "string"
+        },
+        {
+          "name": "_rightSide",
+          "type": "string"
+        },
+        {
+          "name": "_amountA",
+          "type": "uint256"
+        },
+        {
+          "name": "_amountB",
+          "type": "uint256"
+        },
+        {
+          "name": "_lenA",
+          "type": "uint256"
+        },
+        {
+          "name": "_lenB",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
     }
-];
+  ];
 
 let config = {
     apiKey: "AIzaSyANO56rF2l1pszEOERr8zt61Gn0GDJ1UeU",
@@ -238,6 +256,7 @@ booksRef.on('value', function (Snapshot) {
             data.matchBalance = Coursetro.getBalance(function (error, result) {
                 if (!error) {
                     console.log(result.toNumber());
+                    return 0;
                 } else {
                     return result.toNumber();
                 }
@@ -247,6 +266,21 @@ booksRef.on('value', function (Snapshot) {
         });
     })
 });
+
+function testPayToWin() {
+    var contractAddress = '0x1D770e22EDBCFC66Aba64c4ABB2bdD6e91cfc31f';
+    var abiContract = web3.eth.contract(abi);
+    var betContract = abiContract.at(contractAddress);
+    betContract.payToWinner(true, function (err, res) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log('paytowin : ' +res);
+    })
+}
+//testPayToWin();
+
 
 function getBalanceMatch(matchAddress) {
     var contractAddress = matchAddress;
@@ -288,6 +322,7 @@ export default {
                 })
             }
         }
+
     },
     computed: {
         MatchsSort: function () {
