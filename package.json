@@ -12,7 +12,7 @@
     "firebase": "^3.9.0",
     "font-awesome": "^4.7.0",
     "jquery": "^3.1.1",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.19",
     "toastr": "^2.1.2",
     "vue": "^2.1.0",
     "vue-lodash": "^2.0.0",
